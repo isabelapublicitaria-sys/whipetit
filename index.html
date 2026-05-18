@@ -260,7 +260,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
 </div>
 </div>
 
-<div class="shell">
+<div class="shell" id="main-shell" style="display:none">
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-title">🐾 Whipetit</div>
@@ -682,6 +682,10 @@ let IS_EDITOR = false;
 
 function activateEditorMode(){
   IS_EDITOR = true;
+  // Show dashboard, hide login screen
+  document.getElementById('main-shell').style.display='flex';
+  const ls = document.getElementById('login-screen');
+  if(ls) ls.classList.add('hidden');
   document.getElementById('editor-banner').classList.add('on');
   document.body.classList.add('editor-mode');
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display='');
@@ -696,18 +700,15 @@ function activateEditorMode(){
 }
 
 function deactivateEditorMode(){
-  // showLoginScreen called by doLogout directly
   IS_EDITOR = false;
+  document.getElementById('main-shell').style.display='none';
+  const ls = document.getElementById('login-screen');
+  if(ls) ls.classList.remove('hidden');
   document.getElementById('editor-banner').classList.remove('on');
   document.body.classList.remove('editor-mode');
   document.querySelectorAll('.editor-only').forEach(el=>el.style.display='none');
   document.getElementById('login-fab-label').textContent='Entrar como editora';
   document.getElementById('login-fab').style.color='rgba(255,255,255,.45)';
-  const active = document.querySelector('.page.active');
-  if(active){
-    const id = active.id.replace('page-','');
-    ({overview:renderOverview,vendas:renderVendas,despesas:renderDespesas,estoque:renderEstoque,crm:renderCRM,invest:renderInvest})[id]?.();
-  }
 }
 
 function toggleLoginModal(){
