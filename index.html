@@ -514,57 +514,13 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
 </div>
 </div>
 
-<!-- ════════════════════ FIREBASE + AUTH + SCRIPT ════════════════════ -->
-<script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import { getFirestore, collection, getDocs, writeBatch, doc } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
-import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
-
-const FC = {
-  apiKey:"AIzaSyBNlUreZajFn6jQuwreb-1JvbWLe9CXkd8",
-  authDomain:"whipetit-d83e0.firebaseapp.com",
-  projectId:"whipetit-d83e0",
-  storageBucket:"whipetit-d83e0.firebasestorage.app",
-  messagingSenderId:"705542424524",
-  appId:"1:705542424524:web:5a35425cb7f4560be33f69"
-};
-const app  = initializeApp(FC);
-const db   = getFirestore(app);
-const auth = getAuth(app);
-
-// ── AUTH STATE ──
-onAuthStateChanged(auth, user => {
-  if(user){
-    window.activateEditorMode();
-    closeModal('login');
-  } else {
-    window.deactivateEditorMode();
-  }
-});
-
-// ── LOGIN / LOGOUT ──
-window.doLogin = async function(){
-  const email = document.getElementById('li-email').value.trim();
-  const senha = document.getElementById('li-senha').value;
-  const btn   = document.getElementById('li-btn');
-  const erro  = document.getElementById('li-erro');
-  erro.style.display='none';
-  btn.textContent='Entrando...'; btn.disabled=true;
-  try {
-    await signInWithEmailAndPassword(auth, email, senha);
-    // onAuthStateChanged cuidará do resto
-  } catch(e) {
-    erro.textContent = e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password' || e.code === 'auth/user-not-found'
-      ? 'E-mail ou senha incorretos.' : 'Erro ao entrar. Tente novamente.';
-    erro.style.display='block';
-  } finally {
-    btn.textContent='Entrar'; btn.disabled=false;
-  }
-};
-
-window.doLogout = async function(){
-  await signOut(auth);
-};
+<!-- ════════════════════ SUPABASE + AUTH + SCRIPT ════════════════════ -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+// ── SUPABASE INIT ──
+const SUPA_URL = 'https://sxrnvgvzdaibnbownxwx.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4cm52Z3Z6ZGFpYm5ib3dueHd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkxMTM3NDEsImV4cCI6MjA5NDY4OTc0MX0.PE85mOIg5p_InIjheAdFF1HQnRVZ--EOaLZzp2HMw44';
+const supa = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 
 // ── TOAST ──
 function toast(msg, ok=true){
@@ -576,45 +532,80 @@ function toast(msg, ok=true){
   el._t = setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.style.display='none',400); }, 2800);
 }
 
+// ── LOGIN ──
+window.doLogin = async function(){
+  const email = document.getElementById('li-email').value.trim();
+  const senha = document.getElementById('li-senha').value;
+  const btn   = document.getElementById('li-btn');
+  const erro  = document.getElementById('li-erro');
+  erro.style.display='none';
+  btn.textContent='Entrando...'; btn.disabled=true;
+  try {
+    const { error } = await supa.auth.signInWithPassword({ email, password: senha });
+    if(error) throw error;
+    window.activateEditorMode();
+    closeModal('login');
+    toast('✓ Modo editora ativo');
+  } catch(e) {
+    erro.textContent = 'E-mail ou senha incorretos.';
+    erro.style.display='block';
+  } finally {
+    btn.textContent='Entrar'; btn.disabled=false;
+  }
+};
+
+window.doLogout = async function(){
+  await supa.auth.signOut();
+  window.deactivateEditorMode();
+  toast('Sessão encerrada');
+};
+
+// Restaurar sessão ao recarregar
+(async ()=>{
+  const { data } = await supa.auth.getSession();
+  if(data?.session) window.activateEditorMode();
+})();
+
 // ── SAVE ──
-async function save(name){
-  if(!auth.currentUser){ toast('Salvo localmente (sem login)', false); return; }
+window._save = async function(name){
+  const { data: { session } } = await supa.auth.getSession();
+  if(!session) { toast('Sem permissão para salvar', false); return; }
+
   try {
     const src = name === 'estoque' ? window.estoque : window[name];
-    const batch = writeBatch(db);
-    const colRef = collection(db, name);
-    const snap = await getDocs(colRef);
-    snap.forEach(d => batch.delete(d.ref));
-    src.forEach((item,i) => {
-      const id = String(item.id !== undefined ? item.id : i);
-      batch.set(doc(colRef, id), JSON.parse(JSON.stringify(item)));
-    });
-    await batch.commit();
+    // Upsert all rows — delete first then insert
+    await supa.from(name).delete().neq('id', -999999);
+    if(src.length > 0){
+      const rows = src.map((item, i) => ({ ...item, id: item.id ?? i }));
+      const { error } = await supa.from(name).upsert(rows);
+      if(error) throw error;
+    }
     toast('✓ Salvo');
-  } catch(e){ toast('Erro ao salvar', false); console.error(e); }
-}
+  } catch(e) { toast('Erro ao salvar: ' + e.message, false); console.error(e); }
+};
 
 // ── LOAD ALL ──
 async function loadAll(){
   toast('Carregando dados...');
   try {
+    // Load each collection
     for (const name of ['vendas','despesas','movimentacoes','clientes','investimentos']){
-      const snap = await getDocs(collection(db, name));
-      if(!snap.empty){ const arr=[]; snap.forEach(d=>arr.push(d.data())); window[name]=arr; }
+      const { data, error } = await supa.from(name).select('*').order('id');
+      if(!error && data && data.length > 0) window[name] = data;
     }
-    const snap = await getDocs(collection(db,'estoque'));
-    if(!snap.empty){
-      const tmp=[]; snap.forEach(d=>tmp.push({...d.data(),_id:d.id}));
-      tmp.sort((a,b)=>+a._id - +b._id);
-      tmp.forEach((t,i)=>{ delete t._id; window.estoque[i]={...window.estoque[i],...t}; });
+    // Estoque — fixed 4 rows keyed by index
+    const { data: estData } = await supa.from('estoque').select('*').order('id');
+    if(estData && estData.length > 0){
+      estData.forEach((row, i) => {
+        if(window.estoque[i]) window.estoque[i] = {...window.estoque[i], ...row};
+      });
     }
     toast('✓ Dados carregados');
-  } catch(e){ toast('Erro ao carregar', false); console.error(e); }
+  } catch(e) { toast('Erro ao carregar', false); console.error(e); }
   populateMeses();
   renderOverview();
 }
 
-window._save = save;
 loadAll();
 </script>
 
