@@ -17,17 +17,7 @@
 body{background:var(--cream);color:var(--bark);font-family:'DM Sans',sans-serif;font-size:14px}
 a{color:inherit;text-decoration:none}
 
-/* ── EDITOR BANNER ── */
-#editor-banner{display:none;background:linear-gradient(90deg,#C4622D,#C89A3F);color:#fff;
-  padding:10px 20px;font-size:13px;font-weight:500;align-items:center;justify-content:space-between;
-  position:sticky;top:0;z-index:100;flex-wrap:wrap;gap:8px}
-#editor-banner.on{display:flex}
-.banner-left{display:flex;align-items:center;gap:10px}
-.banner-btns{display:flex;gap:8px;flex-wrap:wrap}
-.banner-btn{padding:5px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.5);
-  background:transparent;color:#fff;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:500;transition:all .15s}
-.banner-btn:hover{background:rgba(255,255,255,.2)}
-.banner-btn.solid{background:rgba(255,255,255,.25)}
+
 
 /* ── LAYOUT ── */
 .shell{display:flex;min-height:100vh}
@@ -225,25 +215,10 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
 </div>
 
 
-<!-- LOGIN BUTTON (bottom-right, always visible) -->
-<button id="login-fab" onclick="toggleLoginModal()"
-  style="position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:400;
-  background:var(--bark);color:rgba(255,255,255,.45);border:none;border-radius:20px;
-  padding:6px 16px;font-size:11px;font-family:'DM Sans',sans-serif;cursor:pointer;
-  letter-spacing:.04em;transition:all .15s;display:flex;align-items:center;gap:6px"
-  title="Acesso editora">
-  <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-  <span id="login-fab-label">Entrar como editora</span>
-</button>
+
 
 <!-- EDITOR BANNER -->
-<div id="editor-banner">
-  <div class="banner-left">✏️ <strong>Modo editora ativo</strong> — você pode editar todos os campos e adicionar dados</div>
-  <div class="banner-btns">
-    <button class="banner-btn" onclick="copyReadonlyLink()">📋 Copiar link de visualização</button>
-    <button class="banner-btn" onclick="doLogout()" style="border-color:rgba(255,255,255,.3)">Sair</button>
-  </div>
-</div>
+
 
 <!-- LOGIN MODAL -->
 <div class="modal-bg" id="modal-login">
@@ -260,7 +235,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
 </div>
 </div>
 
-<div class="shell" id="main-shell" style="display:none">
+<div class="shell" id="main-shell">
 <aside class="sidebar">
   <div class="logo">
     <div class="logo-title">🐾 Whipetit</div>
@@ -295,6 +270,13 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
       <span>Investimentos</span>
     </button>
   </nav>
+  <div style="padding:.75rem">
+    <button onclick="doLogout()" class="nav-btn" style="width:100%;color:rgba(255,255,255,.4);font-size:12px;gap:8px">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/></svg>
+      <span>Sair</span>
+    </button>
+  </div>
+</nav>
 </aside>
 
 <main class="main">
@@ -339,7 +321,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
         <option value="">Todos os canais</option>
         <option>Venda Presencial</option><option>Venda Site</option><option>Brinde</option>
       </select>
-      <button class="btn btn-p editor-only" onclick="openModal('venda')" style="display:none">+ Venda</button>
+      <button class="btn btn-p editor-only" onclick="openModal('venda')">+ Venda</button>
     </div>
   </div>
   <div class="card">
@@ -360,7 +342,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
     <div class="page-title">Despesas</div>
     <div class="topbar-right">
       <select class="pill" id="d-mes" onchange="renderDespesas()"><option value="">Todos os meses</option></select>
-      <button class="btn btn-p editor-only" onclick="openModal('despesa')" style="display:none">+ Lançar</button>
+      <button class="btn btn-p editor-only" onclick="openModal('despesa')">+ Lançar</button>
     </div>
   </div>
   <div class="metrics" id="d-metrics" style="grid-template-columns:repeat(3,1fr)"></div>
@@ -377,7 +359,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
   <div class="topbar">
     <div class="page-title">Estoque</div>
     <div class="topbar-right">
-      <button class="btn btn-p editor-only" onclick="openModal('estoque')" style="display:none">+ Entrada</button>
+      <button class="btn btn-p editor-only" onclick="openModal('estoque')">+ Entrada</button>
     </div>
   </div>
   <div class="card" style="margin-bottom:1rem">
@@ -401,7 +383,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
     <div class="page-title">CRM / <em>Funil</em></div>
     <div class="topbar-right">
       <input class="pill" type="text" placeholder="Buscar..." oninput="renderCRM()" id="crm-s">
-      <button class="btn btn-p editor-only" onclick="openModal('cliente')" style="display:none">+ Contato</button>
+      <button class="btn btn-p editor-only" onclick="openModal('cliente')">+ Contato</button>
     </div>
   </div>
   <div class="funnel" id="funnel"></div>
@@ -412,7 +394,7 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
   <div class="topbar">
     <div class="page-title">Investimentos <em>por sócia</em></div>
     <div class="topbar-right">
-      <button class="btn btn-p editor-only" onclick="openModal('invest')" style="display:none">+ Aporte</button>
+      <button class="btn btn-p editor-only" onclick="openModal('invest')">+ Aporte</button>
     </div>
   </div>
   <div id="inv-pessoas" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1rem;margin-bottom:1.25rem"></div>
@@ -678,7 +660,7 @@ window._loadAll = loadAll;
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <script>
 // ══════════ EDITOR MODE ══════════
-let IS_EDITOR = false;
+let IS_EDITOR = false; // set to true on login
 
 function activateEditorMode(){
   IS_EDITOR = true;
@@ -686,11 +668,8 @@ function activateEditorMode(){
   document.getElementById('main-shell').style.display='flex';
   const ls = document.getElementById('login-screen');
   if(ls) ls.classList.add('hidden');
-  document.getElementById('editor-banner').classList.add('on');
   document.body.classList.add('editor-mode');
-  document.querySelectorAll('.editor-only').forEach(el=>el.style.display='');
-  document.getElementById('login-fab-label').textContent='Editora ativa';
-  document.getElementById('login-fab').style.color='rgba(255,255,255,.7)';
+  document.querySelectorAll('.editor-only').forEach(el=>el.style.removeProperty('display'));
   // re-render current page
   const active = document.querySelector('.page.active');
   if(active){
@@ -704,11 +683,8 @@ function deactivateEditorMode(){
   document.getElementById('main-shell').style.display='none';
   const ls = document.getElementById('login-screen');
   if(ls) ls.classList.remove('hidden');
-  document.getElementById('editor-banner').classList.remove('on');
   document.body.classList.remove('editor-mode');
-  document.querySelectorAll('.editor-only').forEach(el=>el.style.display='none');
-  document.getElementById('login-fab-label').textContent='Entrar como editora';
-  document.getElementById('login-fab').style.color='rgba(255,255,255,.45)';
+  
 }
 
 function toggleLoginModal(){
