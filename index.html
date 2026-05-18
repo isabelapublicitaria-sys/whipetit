@@ -172,9 +172,58 @@ body.editor-mode .editable:focus{outline:none;border-bottom-color:var(--terra)}
   .funnel{grid-template-columns:repeat(5,155px)}
 }
 @media(max-width:580px){.metrics{grid-template-columns:1fr}.g2{grid-template-columns:1fr}}
+
+/* ── LOGIN SCREEN ── */
+#login-screen{
+  display:flex;position:fixed;inset:0;z-index:1000;
+  background:var(--cream);align-items:center;justify-content:center;
+  flex-direction:column;gap:0;
+}
+#login-screen.hidden{display:none}
+.ls-card{
+  background:#fff;border:1px solid var(--border);border-radius:var(--r);
+  padding:2.5rem 2rem;width:360px;max-width:92vw;
+  box-shadow:0 8px 40px rgba(44,26,14,.13);
+  display:flex;flex-direction:column;gap:14px;
+}
+.ls-logo{text-align:center;margin-bottom:.25rem}
+.ls-logo-title{font-family:'DM Serif Display',serif;font-size:28px;color:var(--bark)}
+.ls-logo-sub{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-top:3px}
+.ls-divider{border:none;border-top:1px solid var(--border);margin:.25rem 0}
+.ls-erro{font-size:12px;color:var(--terra);display:none;padding:7px 12px;background:#FDE8E8;border-radius:var(--rs)}
+
 </style>
 </head>
 <body>
+
+<!-- ── TELA DE LOGIN (cobre tudo até autenticar) ── -->
+<div id="login-screen">
+  <div class="ls-card">
+    <div class="ls-logo">
+      <div class="ls-logo-title">🐾 Whipetit</div>
+      <div class="ls-logo-sub">Área restrita</div>
+    </div>
+    <hr class="ls-divider">
+    <div class="field">
+      <label>E-mail</label>
+      <input type="email" id="ls-email" placeholder="seu@email.com" autocomplete="username"
+        onkeydown="if(event.key==='Enter')document.getElementById('ls-senha').focus()">
+    </div>
+    <div class="field">
+      <label>Senha</label>
+      <input type="password" id="ls-senha" placeholder="••••••••" autocomplete="current-password"
+        onkeydown="if(event.key==='Enter')doLoginScreen()">
+    </div>
+    <div id="ls-erro" class="ls-erro"></div>
+    <button class="btn btn-p" id="ls-btn" onclick="doLoginScreen()" style="width:100%;justify-content:center;padding:10px">
+      Entrar
+    </button>
+    <div style="font-size:11px;color:var(--muted);text-align:center">
+      Acesso restrito às sócias da Whipetit
+    </div>
+  </div>
+</div>
+
 
 <!-- LOGIN BUTTON (bottom-right, always visible) -->
 <button id="login-fab" onclick="toggleLoginModal()"
@@ -532,20 +581,24 @@ function toast(msg, ok=true){
   el._t = setTimeout(()=>{ el.style.opacity='0'; setTimeout(()=>el.style.display='none',400); }, 2800);
 }
 
-// ── LOGIN ──
-window.doLogin = async function(){
-  const email = document.getElementById('li-email').value.trim();
-  const senha = document.getElementById('li-senha').value;
-  const btn   = document.getElementById('li-btn');
-  const erro  = document.getElementById('li-erro');
+// ── LOGIN SCREEN ──
+function showLoginScreen(){ document.getElementById('login-screen').classList.remove('hidden'); }
+function hideLoginScreen(){ document.getElementById('login-screen').classList.add('hidden'); }
+
+window.doLoginScreen = async function(){
+  const email = document.getElementById('ls-email').value.trim();
+  const senha = document.getElementById('ls-senha').value;
+  const btn   = document.getElementById('ls-btn');
+  const erro  = document.getElementById('ls-erro');
   erro.style.display='none';
   btn.textContent='Entrando...'; btn.disabled=true;
   try {
     const { error } = await supa.auth.signInWithPassword({ email, password: senha });
     if(error) throw error;
+    hideLoginScreen();
     window.activateEditorMode();
-    closeModal('login');
-    toast('✓ Modo editora ativo');
+    await loadAll();
+    toast('✓ Bem-vinda, editora!');
   } catch(e) {
     erro.textContent = 'E-mail ou senha incorretos.';
     erro.style.display='block';
@@ -554,16 +607,27 @@ window.doLogin = async function(){
   }
 };
 
+// ── LOGIN MODAL (botão discreto no banner) ──
+window.doLogin = window.doLoginScreen;
+
 window.doLogout = async function(){
   await supa.auth.signOut();
   window.deactivateEditorMode();
+  showLoginScreen();
   toast('Sessão encerrada');
 };
 
 // Restaurar sessão ao recarregar
 (async ()=>{
   const { data } = await supa.auth.getSession();
-  if(data?.session) window.activateEditorMode();
+  if(data?.session){
+    hideLoginScreen();
+    window.activateEditorMode();
+    loadAll();
+  } else {
+    showLoginScreen();
+    // Still load data for public view — but we're now requiring login, so skip
+  }
 })();
 
 // ── SAVE ──
@@ -606,7 +670,9 @@ async function loadAll(){
   renderOverview();
 }
 
-loadAll();
+// Session check happens in auth block above
+// loadAll is called after auth confirms
+window._loadAll = loadAll;
 </script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
@@ -630,6 +696,7 @@ function activateEditorMode(){
 }
 
 function deactivateEditorMode(){
+  // showLoginScreen called by doLogout directly
   IS_EDITOR = false;
   document.getElementById('editor-banner').classList.remove('on');
   document.body.classList.remove('editor-mode');
