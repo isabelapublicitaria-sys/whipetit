@@ -625,7 +625,7 @@ window._save = async function(name){
 
     // Safety check
     if(!src || !Array.isArray(src)) {
-      console.warn('_save: source not found for', name);
+      toast('Dados não encontrados: ' + name, false);
       return;
     }
 
@@ -724,7 +724,7 @@ function copyReadonlyLink(){
 }
 
 // ══════════ DATA ══════════
-let vendas = [
+window.vendas = [
   {id:1,data:"05/01/2026",cliente:"Speedy",canal:"Brinde",p50:0,f50:0,p25:0,f25:2,preco:0,total:0,pgto:""},
   {id:2,data:"24/01/2026",cliente:"Fotos",canal:"Brinde",p50:0,f50:0,p25:1,f25:1,preco:0,total:0,pgto:""},
   {id:3,data:"06/02/2026",cliente:"Kit Helena",canal:"Brinde",p50:0,f50:0,p25:1,f25:1,preco:0,total:0,pgto:""},
@@ -751,7 +751,7 @@ let vendas = [
   {id:24,data:"11/04/2026",cliente:"Katia Lotus",canal:"Venda Presencial",p50:0,f50:0,p25:1,f25:1,preco:10,total:20,pgto:""},
 ];
 
-let despesas = [
+window.despesas = [
   {id:1,data:"01/01/2026",desc:"Hospedagem do site",cat:"Despesa Operacional",val:69.90},
   {id:2,data:"01/02/2026",desc:"Hospedagem do site",cat:"Despesa Operacional",val:69.90},
   {id:3,data:"01/03/2026",desc:"Hospedagem do site",cat:"Despesa Operacional",val:69.90},
@@ -760,15 +760,15 @@ let despesas = [
 ];
 
 // Estoque com preço site E preço presencial separados
-let estoque = [
+window.estoque = [
   {nome:"Chips Pulmão Suíno 50g",sku:"PUL50",barcode:"",precoSite:16,precoPres:16,custo:7,inicial:150},
   {nome:"Chips Fígado+Maçã+Bet. 50g",sku:"FIG50",barcode:"",precoSite:16,precoPres:16,custo:7,inicial:150},
   {nome:"Chips Pulmão Suíno 25g",sku:"PUL25",barcode:"",precoSite:10,precoPres:10,custo:4,inicial:300},
   {nome:"Chips Fígado+Maçã+Bet. 25g",sku:"FIG25",barcode:"",precoSite:10,precoPres:10,custo:4,inicial:300},
 ];
 
-let movimentacoes = [];
-let clientes = [
+window.movimentacoes = [];
+window.clientes = [
   {id:1,nome:"Elisabeth Figueiredo",etapa:"Cliente",tel:"11989581865",dog:"Antonela",porte:"Grande",maia:"Sim",torre:"Flamboyant",apt:"",hist:[{data:"12/02/2026",txt:"Comprou Fígado 50g. Dinheiro."}],next:""},
   {id:2,nome:"Gisele",etapa:"Cliente",tel:"11953051273",dog:"Chanel",porte:"Pequeno",maia:"Sim",torre:"Iris",apt:"907",hist:[{data:"12/02/2026",txt:"Comprou Pulmão 50g. Pix C6."}],next:""},
   {id:3,nome:"Dilma Silva",etapa:"Recorrente",tel:"11973429219",dog:"Jimy e Estelinha",porte:"Pequeno",maia:"",torre:"",apt:"",hist:[{data:"15/02/2026",txt:"5x Fígado 25g."},{data:"16/03/2026",txt:"Recompra: 3x Pulmão + 3x Fígado 25g."}],next:""},
@@ -784,7 +784,7 @@ let clientes = [
   {id:13,nome:"Ana Maria Silva",etapa:"Cliente",tel:"11996482558",dog:"Luna",porte:"",maia:"",torre:"",apt:"",hist:[{data:"18/03/2026",txt:"2x Pulmão 50g + 2x Fígado 50g presencial."}],next:""},
   {id:14,nome:"Vanessa Morelli",etapa:"Cliente",tel:"11964357648",dog:"",porte:"",maia:"",torre:"",apt:"",hist:[{data:"06/03/2026",txt:"Pulmão 25g + Fígado 25g presencial."}],next:""},
 ];
-let investimentos = [];
+window.investimentos = [];
 let editCId = null;
 let fChart = null, cChart = null;
 
